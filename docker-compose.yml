@@ -1,0 +1,17 @@
+services: 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+    #  - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/nginx/cert.pem:/etc/nginx/certs/cert.pem
+      - /opt/nginx/cert.key:/etc/nginx/certs/cert.key
+      - /opt/nginx/configs:/etc/nginx/conf.d  # Добавляем монтирование конфигов
+    restart: unless-stopped
+    networks:
+      - nginx
+networks:
+  nginx:
+    driver: bridge
