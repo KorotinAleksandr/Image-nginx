@@ -8,7 +8,7 @@ services:
     volumes:
       - /opt/nginx/cert.pem:/etc/nginx/certs/cert.pem
       - /opt/nginx/cert.key:/etc/nginx/certs/cert.key
-      - /opt/nginx/configs:/etc/nginx/conf.d  # Добавляем монтирование конфигов
+      - /opt/nginx/configs/conf_nginx.conf:/etc/nginx/conf.d  # Добавляем монтирование конфигов
     restart: unless-stopped
     networks:
       - nginx
