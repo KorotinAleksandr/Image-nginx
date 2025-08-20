@@ -1,0 +1,36 @@
+stages:
+  - deploy
+
+deploy_nginx:
+  stage: deploy
+  services:
+    - docker:dind
+  tags:
+    - docker
+    - dind
+    - prod
+  # Добавляем переменные в varables данные по вашему хосту
+  variables:
+    DEPLOY_SSH_USER: ${DEPLOY_SSH_USER} # Юзер
+    DEPLOY_SSH_KEY: ${DEPLOY_SSH_KEY} # Ключ
+    DEPLOY_SSH_HOST: ${DEPLOY_SSH_HOST} # Адрес хоста
+  before_script:
+    - apk add --no-cache docker-compose
+    # TODO вынос в создание базового образа для развертывания
+    - apt update && apt add openssh-client
+    # Ключи для подключения по SSH
+    - eval $(ssh-agent -s)    
+    # добавление в известные
+    - cat $DEPLOY_SSH_KEY | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -t rsa $DEPLOY_SSH_HOST >> ~/.ssh/known_hosts
+  script:
+     # Создание удаленного контекста подключения
+    - docker context create remote --docker "host=ssh://${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
+    - scp configs/conf_nginx.conf ${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}:/opt/nginx/configs
+    - docker --context remote compose -p nginx -f docker-compose.yml down || true
+    - docker --context remote compose -p nginx -f docker-compose.yml up -d
+  only: 
+    # Ограничения на ветки в которых приходит выполнение
+    - master
